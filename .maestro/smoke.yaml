@@ -1,0 +1,46 @@
+appId: ${APP_ID}
+# Installed-app smoke test for device-only use. Run with:
+#   maestro test -e APP_ID=com.example.myapp .maestro/smoke.yaml
+# Clears this app's data first. Account flows are covered by e2e/app.spec.ts.
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Create account or sign in"
+    timeout: 30000
+- takeScreenshot: welcome
+- tapOn: "Use on this device.*"
+- extendedWaitUntil:
+    visible: "Write a note"
+    timeout: 15000
+- takeScreenshot: home
+- tapOn: "Write a note"
+- tapOn: "Title"
+- inputText: "Installed app note"
+- takeScreenshot: editor
+- tapOn: "Save note"
+- tapOn: "Notes"
+- assertVisible: ".*Installed app note.*"
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "Write a note"
+    timeout: 30000
+- tapOn: "Notes"
+- assertVisible: ".*Installed app note.*"
+- takeScreenshot: notes
+- tapOn:
+    text: "Settings"
+    index: 0
+- extendedWaitUntil:
+    visible: "Account & sync"
+    timeout: 10000
+- takeScreenshot: settings
+# Center the control so the fixed bottom tab bar can't cover the tap target.
+- scrollUntilVisible:
+    element: "Dark appearance"
+    centerElement: true
+- tapOn: "Dark appearance"
+- takeScreenshot: settings-dark
+- tapOn: "Dark appearance"
+- assertVisible: "Dark appearance"

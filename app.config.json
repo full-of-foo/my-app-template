@@ -1,0 +1,13 @@
+{
+  "name": "My App",
+  "shortName": "My App",
+  "tagline": "A simple starting point for your next idea.",
+  "description": "A private, offline-first app with optional accounts that sync across devices.",
+  "appId": "com.example.myapp",
+  "urlScheme": "myapp",
+  "productionOrigin": "https://my-app.onrender.com",
+  "themeColor": "#3f5a8a",
+  "backgroundColor": "#f8f9fb",
+  "publisher": "Your name or company",
+  "supportEmail": "support@example.com"
+}

@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  web-and-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app_local_only
+          POSTGRES_DB: app_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app" --health-interval 2s --health-retries 20
+    env:
+      DATABASE_URL: postgres://app:app_local_only@localhost:5432/app_test
+      TEST_DATABASE_URL: postgres://app:app_local_only@localhost:5432/app_test
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project chromium --project phone

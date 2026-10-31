@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-mobile
+coverage
+coverage-server
+playwright-report
+test-results
+reports
+package-lock.json
+android/
+ios/

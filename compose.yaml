@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app_local_only
+    ports:
+      - "127.0.0.1:54330:5432"
+    volumes:
+      - app-postgres:/var/lib/postgresql/data
+      - ./scripts/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  app-postgres:
