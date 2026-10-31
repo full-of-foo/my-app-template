@@ -439,3 +439,14 @@ label.check input {
 .hint {
   margin: -8px 0 14px;
 }
+
+/* Installed apps: scrolled content must not show through the system status bar. */
+:is([data-platform="ios"], [data-platform="android"]) body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--surface);
+  pointer-events: none;
+  z-index: 19;
+}
