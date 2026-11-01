@@ -1,3 +1,8 @@
+import {
+  installEmailRecovery,
+  recoveryMailer,
+  type RecoveryMail,
+} from "./email-recovery";
 import express, {
   type Request,
   type Response,
@@ -30,6 +35,7 @@ type Options = {
   production?: boolean;
   limits?: boolean;
   staticDir?: string;
+  recoveryMail?: RecoveryMail;
 };
 export function createApp(pool: Pool, options: Options) {
   const app = express();
@@ -157,6 +163,12 @@ export function createApp(pool: Pool, options: Options) {
     res.locals.user = user;
     next();
   }
+  installEmailRecovery(app, pool, {
+    required,
+    name: config.name,
+    send: options.recoveryMail ?? recoveryMailer(),
+    limits: options.limits,
+  });
   app.get("/api/health", async (_req, res) => {
     await pool.query("SELECT 1");
     res.json({ ok: true });
@@ -263,6 +275,9 @@ export function createApp(pool: Pool, options: Options) {
         return;
       }
       recoveredId = result.rows[0].id;
+      await client.query("DELETE FROM email_challenges WHERE user_id=$1", [
+        recoveredId,
+      ]);
       await client.query("DELETE FROM sessions WHERE user_id=$1", [
         recoveredId,
       ]);

@@ -11,6 +11,7 @@ export default tseslint.config(
       "android/**",
       "ios/**",
       ".mobile-artifacts/**",
+      ".local-logs/**",
       "ios/App/CapApp-SPM/**",
       "coverage/**",
       "coverage-server/**",

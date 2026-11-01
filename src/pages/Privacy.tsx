@@ -24,10 +24,21 @@ export default function Privacy() {
         </p>
       </section>
       <section className="panel">
+        <h2>Optional recovery email</h2>
+        <p>
+          When email recovery is available, you can add and verify an address
+          during account setup or in Settings. We store it to help you reset a
+          forgotten password. Resend processes the address and recovery message
+          for delivery; your app records are not included. You can remove the
+          address in Settings. Deleting your account removes it and any pending
+          recovery codes from our database.
+        </p>
+      </section>
+      <section className="panel">
         <h2>What we don’t do</h2>
         <p>
-          No advertising, no tracking and no analytics. We don’t sell or share
-          your data. The sample data never leaves your device.
+          No advertising, no tracking and no analytics. We don’t sell your data
+          or share it for advertising. The sample data never leaves your device.
         </p>
       </section>
       <section className="panel">

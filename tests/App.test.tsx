@@ -26,6 +26,10 @@ let cloud = { revision: 0, data: emptyDocument() };
 function server(path: string, init?: RequestInit) {
   const custom = handler(path, init);
   if (custom) return custom;
+  if (path === "/api/account/email")
+    return Response.json({ available: false, email: null });
+  if (path === "/api/auth/email-capability")
+    return Response.json({ available: false });
   const method = init?.method ?? "GET";
   if (path === "/api/auth/session") return Response.json({ user: null });
   if (path === "/api/data" && method === "GET") return Response.json(cloud);
@@ -151,7 +155,7 @@ it("registers, shows the recovery code once, syncs quietly and signs out", async
     "c".repeat(64),
   );
   await event.click(
-    screen.getByRole("button", { name: "I’ve saved my recovery code" }),
+    screen.getByRole("button", { name: /I’ve saved my recovery code/ }),
   );
   expect(
     await screen.findByRole("heading", { name: "Hello, tester" }),

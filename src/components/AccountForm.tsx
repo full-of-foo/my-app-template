@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { EmailPasswordReset, RecoveryEmailSettings } from "../EmailRecovery";
 import { useState } from "react";
 import { authenticate, type User } from "../account-api";
 import { config } from "../config";
@@ -22,6 +24,20 @@ export default function AccountForm({
   connect: (user: User) => Promise<void>;
   offline?: boolean;
 }) {
+  const navigate = useNavigate();
+  const [emailRecovery, setEmailRecovery] = useState(true);
+  async function finish(user: User) {
+    setBusy(true);
+    setError("");
+    try {
+      await connect(user);
+      navigate("/", { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   const [mode, setMode] = useState<Mode>("register");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -30,13 +46,28 @@ export default function AccountForm({
   const [error, setError] = useState("");
   const [recovery, setRecovery] = useState<{ code: string; user: User }>();
 
+  if (mode === "recover" && emailRecovery && !recovery)
+    return (
+      <section>
+        <EmailPasswordReset />
+        <div className="button-row">
+          <button className="secondary" onClick={() => setEmailRecovery(false)}>
+            Use my saved recovery code
+          </button>
+          <button className="secondary" onClick={() => setMode("login")}>
+            Back to sign in
+          </button>
+        </div>
+      </section>
+    );
   if (recovery)
     return (
       <section className="recovery" aria-labelledby="recovery-title">
         <h2 id="recovery-title">Save your recovery code</h2>
         <p>
-          This is the only way to get back into your account if you forget your
-          password. {config.name} can’t show it again or reset it for you.
+          Keep this backup code somewhere safe. You can also add a verified
+          recovery email below or later in Settings. {config.name} can’t show
+          this code again.
         </p>
         <output className="code" aria-label="Recovery code">
           {recovery.code}
@@ -52,11 +83,18 @@ export default function AccountForm({
           <button
             type="button"
             className="primary"
-            onClick={() => void connect(recovery.user)}
+            disabled={busy}
+            onClick={() => void finish(recovery.user)}
           >
-            I’ve saved my recovery code
+            I’ve saved my recovery code — continue
           </button>
         </div>
+        <RecoveryEmailSettings />
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
       </section>
     );
 
@@ -78,7 +116,7 @@ export default function AccountForm({
           setCode("");
           if (result.recoveryCode)
             setRecovery({ code: result.recoveryCode, user: result.user });
-          else await connect(result.user);
+          else await finish(result.user);
         } catch (e) {
           setError(e instanceof Error ? e.message : "Something went wrong.");
         } finally {

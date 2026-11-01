@@ -1,3 +1,4 @@
+import { RecoveryEmailSettings } from "../EmailRecovery";
 import { useState } from "react";
 import { Cloud, RefreshCw } from "lucide-react";
 import { config } from "../config";
@@ -161,6 +162,7 @@ export default function AccountPanel({ app }: { app: AppState }) {
           )}
         </>
       )}
+      {user && <RecoveryEmailSettings key={user.id} />}
       {error && (
         <p className="error" role="alert">
           {error}

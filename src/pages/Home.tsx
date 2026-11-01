@@ -21,10 +21,12 @@ export default function Home({
       </h1>
       <p className="lead">{config.tagline}</p>
       <section className="panel" aria-labelledby="summary-title">
-        <h2 id="summary-title">Your notes</h2>
+        <h2 id="summary-title">
+          {count === 0 ? "Create your first note" : "Your notes"}
+        </h2>
         <p>
           {count === 0
-            ? "You haven’t written anything yet."
+            ? "Capture an idea, a reminder or something you want to remember. Your note will be here when you return."
             : `You have ${count} note${count === 1 ? "" : "s"}.`}
           {latest && (
             <>
@@ -37,9 +39,11 @@ export default function Home({
           <button className="primary" onClick={onNew}>
             Write a note
           </button>
-          <Link className="button secondary" to="/notes">
-            View all notes
-          </Link>
+          {count > 0 && (
+            <Link className="button secondary" to="/notes">
+              View all notes
+            </Link>
+          )}
         </div>
       </section>
       {app.space?.kind === "device" && (

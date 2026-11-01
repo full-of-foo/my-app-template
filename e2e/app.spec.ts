@@ -27,7 +27,7 @@ test("account lifecycle: create, write, restore on a new device, recover and del
     .innerText();
   expect(code).toMatch(/^[a-f0-9]{64}$/);
   await page
-    .getByRole("button", { name: "I’ve saved my recovery code" })
+    .getByRole("button", { name: /I’ve saved my recovery code/ })
     .click();
   await page.getByRole("button", { name: "Write a note" }).click();
   await page.getByLabel("Title").fill("Cross-device note");
@@ -45,6 +45,9 @@ test("account lifecycle: create, write, restore on a new device, recover and del
     .getByRole("button", { name: "Create account or sign in" })
     .click();
   await other.getByRole("button", { name: "Forgot password" }).click();
+  await other
+    .getByRole("button", { name: "Use my saved recovery code" })
+    .click();
   await other.getByLabel("Username").fill(username);
   await other.getByLabel("Recovery code").fill(code);
   await other.getByLabel("New password").fill(`${password}-2`);
@@ -53,7 +56,7 @@ test("account lifecycle: create, write, restore on a new device, recover and del
     other.getByLabel("Recovery code", { exact: true }),
   ).not.toHaveText(code);
   await other
-    .getByRole("button", { name: "I’ve saved my recovery code" })
+    .getByRole("button", { name: /I’ve saved my recovery code/ })
     .click();
   await other.getByRole("link", { name: "Notes", exact: true }).click();
   await expect(
@@ -80,9 +83,7 @@ test("device-only use works offline and the sample stays separate", async ({
   await accessible(page);
   await page.getByRole("button", { name: "Leave sample" }).click();
   await page.getByRole("button", { name: /Use on this device/ }).click();
-  await expect(
-    page.getByText(/You haven’t written anything yet/),
-  ).toBeVisible();
+  await expect(page.getByText(/Create your first note/)).toBeVisible();
   await context.setOffline(true);
   await page.getByRole("button", { name: "Write a note" }).click();
   await page.getByLabel("Title").fill("Offline note");

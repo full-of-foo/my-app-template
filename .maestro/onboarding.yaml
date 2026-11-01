@@ -1,0 +1,86 @@
+appId: ${APP_ID}
+---
+- launchApp
+- waitForAnimationToEnd
+- startRecording: native-demo
+- tapOn:
+    text: "Today|Home"
+    optional: true
+- runFlow:
+    when:
+      visible: "Leave sample"
+    commands:
+      - tapOn: "Leave sample"
+- runFlow:
+    when:
+      visible: "Use on this device.*"
+    commands:
+      - tapOn: "Use on this device.*"
+      - tapOn:
+          text: "Make yourself at home"
+          optional: true
+- tapOn: "Settings"
+- runFlow:
+    when:
+      visible: ".*Signed in as.*"
+    commands:
+      - scrollUntilVisible:
+          element: "Sign out"
+      - tapOn: "Sign out"
+- runFlow:
+    when:
+      visible: "Create account or sign in"
+    commands:
+      - tapOn: "Create account or sign in"
+- scrollUntilVisible:
+    element: "${USERNAME_LABEL}"
+    centerElement: true
+- tapOn: "${USERNAME_LABEL}"
+- inputText: ${TEST_USERNAME}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- scrollUntilVisible:
+    element: "${PASSWORD_LABEL}"
+    centerElement: true
+- tapOn: "${PASSWORD_LABEL}"
+- inputText: "a-long-native-test-password"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- runFlow:
+    when:
+      platform: iOS
+      visible: "Done"
+    commands:
+      - tapOn: "Done"
+- scrollUntilVisible:
+    element: "Create my account"
+- tapOn: "Create my account"
+- scrollUntilVisible:
+    element: "I.ve saved my recovery code.*"
+    timeout: 30000
+- tapOn: "I.ve saved my recovery code.*"
+- extendedWaitUntil:
+    visible: "${FIRST_ACTION}"
+    timeout: 30000
+- takeScreenshot: dashboard
+- tapOn: "${FIRST_ACTION}"
+- takeScreenshot: first-editor
+- tapOn: "${CLOSE_LABEL}"
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element: "Recovery email address"
+- takeScreenshot: recovery-email
+- assertVisible: "Recovery email address"
+- stopApp
+- launchApp
+- waitForAnimationToEnd
+- tapOn: "Settings"
+- assertVisible: ".*${TEST_USERNAME}.*"
+
+- stopRecording

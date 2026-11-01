@@ -40,3 +40,5 @@ Write requests must come from `APP_ORIGIN` and be JSON. Helmet sets a strict CSP
 ## Native
 
 The installed apps bundle the web build (no remote web content). API calls go through `CapacitorHttp` with the platform cookie store. Release bundles require an HTTPS API origin; `mobile-test` builds allow loopback HTTP for simulators only.
+
+First-use routing and optional verified email recovery: [ONBOARDING_EMAIL_RECOVERY.md](ONBOARDING_EMAIL_RECOVERY.md).

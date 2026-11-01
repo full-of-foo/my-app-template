@@ -9,3 +9,5 @@ reports
 package-lock.json
 android/
 ios/
+
+.local-logs/
