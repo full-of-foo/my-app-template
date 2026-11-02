@@ -1,4 +1,3 @@
-import { FirebaseRecoverySettings } from "./FirebaseRecovery";
 import { useEffect, useState } from "react";
 import { api } from "./account-api";
 
@@ -45,12 +44,6 @@ export function RecoveryEmailSettings() {
       setBusy(false);
     }
   }
-  if (state?.provider === "firebase")
-    return (
-      <FirebaseRecoverySettings
-        initial={{ email: state.email, state: state.state ?? null }}
-      />
-    );
   return (
     <section className="panel" aria-label="Recovery email">
       <h2>Recovery email</h2>

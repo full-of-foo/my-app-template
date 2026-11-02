@@ -17,21 +17,21 @@ export default function Privacy() {
       <section className="panel">
         <h2>With an account</h2>
         <p>
-          Your username, a protected hash of your password and recovery code,
-          and the records you save are stored on our servers so you can use them
-          on other devices. We never store your password itself. Your sign-in
-          lasts 30 days and renews while you use the app.
+          We store your email address and the records you save, so you can use
+          them on your other devices. Google Firebase Authentication handles
+          sign-in: it stores your email and a protected hash of your password
+          and sends verification and password-reset emails. Your records are
+          never sent to Firebase. Data is sent over HTTPS and kept in a database
+          run by our hosting providers. Your sign-in lasts 30 days and renews
+          while you use the app. Older accounts created with a username are
+          asked to add an email the next time they sign in.
         </p>
       </section>
       <section className="panel">
-        <h2>Optional recovery email</h2>
+        <h2>Deleting your account</h2>
         <p>
-          When email recovery is available, you can add and verify an address
-          during account setup or in Settings. We store it to help you reset a
-          forgotten password. Resend processes the address and recovery message
-          for delivery; your app records are not included. You can remove the
-          address in Settings. Deleting your account removes it and any pending
-          recovery codes from our database.
+          Deleting your account in Settings removes your records from our
+          database and deletes your Firebase sign-in.
         </p>
       </section>
       <section className="panel">

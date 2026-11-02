@@ -16,7 +16,9 @@ export default function Home({
     <>
       <h1>
         {app.user
-          ? `Hello, ${app.user.username}`
+          ? app.user.username
+            ? `Hello, ${app.user.username}`
+            : "Hello"
           : `Welcome to ${config.shortName}`}
       </h1>
       <p className="lead">{config.tagline}</p>

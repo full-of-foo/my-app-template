@@ -114,7 +114,7 @@ describe("real PostgreSQL account lifecycle", () => {
     const session = await request(restarted)
       .get("/api/auth/session")
       .set("Cookie", cookie);
-    expect(session.body.user).toEqual({ id, username });
+    expect(session.body.user).toEqual({ id, username, email: null });
     const result = await request(restarted)
       .get("/api/data")
       .set("Cookie", cookie);

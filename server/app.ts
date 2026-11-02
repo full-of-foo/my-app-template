@@ -1,5 +1,5 @@
 import { configuredFirebaseAuth, FirebaseAuthError, type FirebaseAuth } from "./firebase-auth";
-import { FirebaseSetupError, installFirebaseRoutes, firebaseSessionValid, type FirebaseAccount } from "./firebase-routes";
+import { FirebaseSetupError, installFirebaseRoutes, firebaseSessionValid, publicUser, type FirebaseAccount } from "./firebase-routes";
 import {
   installEmailRecovery,
   recoveryMailer,
@@ -155,7 +155,7 @@ export function createApp(pool: Pool, options: Options) {
     );
     const row = result.rows[0];
     if (!row || !(await firebaseSessionValid(row, firebase, req.method === "DELETE" && req.path === "/api/account"))) return null;
-    return { id: row.id, username: row.username };
+    return publicUser(row);
   }
   async function required(req: Request, res: Response, next: NextFunction) {
     const user = await identity(req);
@@ -170,7 +170,10 @@ export function createApp(pool: Pool, options: Options) {
     next();
   }
   installFirebaseRoutes(app, pool, {
-    firebase, required, limits: options.limits, session: makeSession,
+    firebase, required, session: makeSession, readCookie: cookie,
+    createDocument: async (client, id) => {
+      await client.query("INSERT INTO documents(user_id,document) VALUES($1,$2)", [id, JSON.stringify(emptyDocument())]);
+    },
     setCookie: (res, value) => { res.cookie(cookieName, value, cookieOptions); },
     clearCookie: res => { res.clearCookie(cookieName, { ...cookieOptions, maxAge: undefined }); },
   });
@@ -389,7 +392,7 @@ export function createApp(pool: Pool, options: Options) {
   app.use(
     (error: unknown, _req: Request, res: Response, next: NextFunction) => {
       void next;
-      if (error instanceof FirebaseSetupError) { res.status(400).json({error:error.message}); return; }
+      if (error instanceof FirebaseSetupError) { res.status(error.status).json({ error: error.message }); return; }
       if (error instanceof FirebaseAuthError) {
         res.status(error.kind === "credentials" ? 401 : 503).json({ error: error.message });
         return;

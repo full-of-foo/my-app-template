@@ -2,8 +2,13 @@ import { RecoveryEmailSettings } from "../EmailRecovery";
 import { useState } from "react";
 import { Cloud, RefreshCw } from "lucide-react";
 import { config } from "../config";
-import { authenticate } from "../account-api";
+import { accountName } from "../account-api";
 import AccountForm from "./AccountForm";
+import {
+  EmailAccountSettings,
+  signInAgain,
+  useEmailAccounts,
+} from "../EmailAccount";
 import type { AppState } from "../useAppState";
 
 /** Settings → Account & sync. The only place routine sync status appears. */
@@ -13,6 +18,7 @@ export default function AccountPanel({ app }: { app: AppState }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const emailAccounts = useEmailAccounts();
   const run = async (task: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -44,7 +50,7 @@ export default function AccountPanel({ app }: { app: AppState }) {
       ) : (
         <>
           <p>
-            <strong>Signed in as {user.username}</strong>
+            <strong>Signed in as {accountName(user)}</strong>
             <br />
             <span role="status">
               {offline
@@ -65,11 +71,7 @@ export default function AccountPanel({ app }: { app: AppState }) {
               onSubmit={(e) => {
                 e.preventDefault();
                 void run(async () => {
-                  const result = await authenticate(
-                    "login",
-                    user.username,
-                    password,
-                  );
+                  const result = await signInAgain(user, password);
                   await app.connect(result.user);
                 });
               }}
@@ -162,7 +164,10 @@ export default function AccountPanel({ app }: { app: AppState }) {
           )}
         </>
       )}
-      {user && <RecoveryEmailSettings key={user.id} />}
+      {user && emailAccounts && (
+        <EmailAccountSettings key={user.id} user={user} updateAccount={app.connect} />
+      )}
+      {user && emailAccounts === false && <RecoveryEmailSettings key={user.id} />}
       {error && (
         <p className="error" role="alert">
           {error}

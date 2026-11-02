@@ -57,7 +57,10 @@ export const firebasePasswordHash = {
 
 /** Constructed explicitly by the future migration routes; importing this file activates nothing. */
 export function createFirebaseAuth(
-  admin: Pick<Auth, "verifyIdToken" | "getUser" | "deleteUser" | "createUser">,
+  admin: Pick<
+    Auth,
+    "verifyIdToken" | "getUser" | "deleteUser" | "createUser" | "createCustomToken"
+  >,
   transport: typeof fetch = fetch,
   config = firebaseConfig,
 ) {
@@ -121,9 +124,23 @@ export function createFirebaseAuth(
       admin.createUser({ uid, email, password, emailVerified: false }),
     verifyIdToken: (idToken: string) => admin.verifyIdToken(idToken, true),
     getUser: (uid: string) => admin.getUser(uid),
-    async sendVerification(idToken: string) {
-      await admin.verifyIdToken(idToken, true);
-      await request("sendOobCode", { requestType: "VERIFY_EMAIL", idToken });
+    /** Sends Firebase's hosted verification email without asking for the password again. */
+    async sendVerification(uid: string) {
+      const result = z.object({ idToken: z.string().min(1) }).safeParse(
+        await request("signInWithCustomToken", {
+          token: await admin.createCustomToken(uid),
+          returnSecureToken: true,
+        }),
+      );
+      if (
+        !result.success ||
+        (await admin.verifyIdToken(result.data.idToken, true)).uid !== uid
+      )
+        throw new FirebaseAuthError("unavailable");
+      await request("sendOobCode", {
+        requestType: "VERIFY_EMAIL",
+        idToken: result.data.idToken,
+      });
     },
     async sendPasswordReset(email: string) {
       try {

@@ -17,6 +17,9 @@ function setup() {
     getUser: vi.fn<Auth["getUser"]>(),
     importUsers: vi.fn<Auth["importUsers"]>(),
     deleteUser: vi.fn<Auth["deleteUser"]>(),
+    createCustomToken: vi
+      .fn<Auth["createCustomToken"]>()
+      .mockResolvedValue("custom-token"),
   };
   const transport = vi.fn<typeof fetch>();
   return { admin, transport, auth: createFirebaseAuth(admin, transport) };
@@ -132,17 +135,26 @@ describe("Firebase adapter preparation", () => {
       auth.sendPasswordReset("synthetic@example.com"),
     ).rejects.toMatchObject({ kind: "unavailable" });
   });
-  it("uses Firebase hosted verification emails only after verifying the token", async () => {
+  it("sends hosted verification emails for a known user without their password", async () => {
     const { auth, admin, transport } = setup();
-    transport.mockResolvedValue(reply({}));
-    await auth.sendVerification("synthetic-token");
-    expect(JSON.parse(String(transport.mock.calls[0][1]?.body))).toEqual({
+    transport
+      .mockResolvedValueOnce(reply({ idToken: "user-token" }))
+      .mockResolvedValueOnce(reply({}));
+    await auth.sendVerification(uid);
+    expect(admin.createCustomToken).toHaveBeenCalledWith(uid);
+    expect(admin.verifyIdToken).toHaveBeenCalledWith("user-token", true);
+    expect(JSON.parse(String(transport.mock.calls[1][1]?.body))).toEqual({
       requestType: "VERIFY_EMAIL",
-      idToken: "synthetic-token",
+      idToken: "user-token",
     });
-    admin.verifyIdToken.mockRejectedValue(new Error("revoked"));
     transport.mockClear();
-    await expect(auth.sendVerification("revoked-token")).rejects.toThrow();
-    expect(transport).not.toHaveBeenCalled();
+    transport.mockResolvedValueOnce(reply({ idToken: "other-token" }));
+    admin.verifyIdToken.mockResolvedValueOnce({
+      uid: "someone-else",
+    } as DecodedIdToken);
+    await expect(auth.sendVerification(uid)).rejects.toMatchObject({
+      kind: "unavailable",
+    });
+    expect(transport).toHaveBeenCalledTimes(1);
   });
 });

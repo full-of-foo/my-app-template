@@ -11,10 +11,11 @@ export default function Support() {
       <section className="panel">
         <h2>Forgot your password</h2>
         <p>
-          Choose “Forgot password” and enter your username and the recovery code
-          you saved when you created your account. You’ll get a new recovery
-          code. We don’t collect email addresses, so support can’t reset
-          passwords.
+          Go to Settings → Account &amp; sync, choose “Forgot password” and
+          enter your email. Open the link we send to choose a new password, then
+          sign in. If you created your account with a username before email
+          sign-in, choose “Signed up with a username?” and use the recovery code
+          you saved; you’ll then be asked to add your email.
         </p>
       </section>
       <section className="panel">

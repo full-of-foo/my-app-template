@@ -7,13 +7,14 @@ plan currently allows 150 reset emails a day; check the limits page before launc
 
 ## How it behaves
 
-- Usernames, user IDs and synced records never change. Linking an email is optional and needs
-  the current password.
-- After the address is verified and the person presses **finish setup**, Firebase becomes the
-  password authority: the local password hash and recovery code stop working and other sessions
-  are signed out. A Firebase password reset signs out every session.
-- Installed app versions that predate the feature don't send `?protocol=firebase`; the server
-  hides the Firebase flow from them.
+- With Firebase configured, accounts sign up and sign in with **email and password**; "Forgot
+  password" sends Firebase's hosted reset email. People can use the app before verifying; Settings
+  asks them to verify and can resend the email.
+- Older username accounts sign in once ("Signed up with a username?") and must add an email; their
+  password, ID and records stay the same, and other devices are signed out.
+- Without Firebase configured, the template keeps username accounts with a saved recovery code.
+- Installed app versions that predate email accounts don't send `?protocol=firebase` and keep
+  username sign-in.
 
 ## Set up one Firebase project per app
 
@@ -28,8 +29,8 @@ plan currently allows 150 reset emails a day; check the limits page before launc
    `GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/key.json` in `.env`. On Render, upload it as a
    **secret file** and point the variable at `/etc/secrets/<file name>`.
 5. Set `FIREBASE_AUTH_ENABLED=true` and deploy.
-6. Test with a real mailbox: link an email in Settings, open the verification email, finish
-   setup, then use **Forgot password** and the reset email.
+6. Test with a real mailbox: create an account, open the verification email, then use
+   **Forgot password** and the reset email.
 
 ## Tests
 

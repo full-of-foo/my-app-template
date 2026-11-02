@@ -3,9 +3,14 @@ import { z } from "zod";
 import { documentSchema, type AppDocument } from "./data";
 export const userSchema = z.object({
   id: z.string().uuid(),
-  username: z.string(),
+  // Email accounts have no username; older accounts may not have an email yet.
+  username: z.string().nullable(),
+  email: z.string().nullable().optional(),
 });
 export type User = z.infer<typeof userSchema>;
+/** How an account is named in the interface. */
+export const accountName = (user: User) =>
+  user.email ?? user.username ?? "your account";
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -87,4 +92,15 @@ export async function signOut() {
 }
 export async function deleteAccount(password: string) {
   await api("/account", "DELETE", { password });
+}
+
+/** Email-and-password accounts (Firebase Authentication on the server). */
+export async function emailAuthenticate(
+  mode: "register" | "login",
+  email: string,
+  password: string,
+) {
+  return z
+    .object({ user: userSchema })
+    .parse(await api(`/auth/${mode}`, "POST", { email, password }));
 }

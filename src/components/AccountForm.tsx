@@ -3,6 +3,7 @@ import { EmailPasswordReset, RecoveryEmailSettings } from "../EmailRecovery";
 import { useState } from "react";
 import { authenticate, type User } from "../account-api";
 import { config } from "../config";
+import { EmailSignIn, useEmailAccounts } from "../EmailAccount";
 
 type Mode = "register" | "login" | "recover";
 const tabs: Record<Mode, string> = {
@@ -16,8 +17,22 @@ const submits: Record<Mode, string> = {
   recover: "Reset password",
 };
 
+/** Email sign-in when the server offers it; otherwise username accounts. */
+export default function AccountForm(props: {
+  connect: (user: User) => Promise<void>;
+  offline?: boolean;
+}) {
+  const emailAccounts = useEmailAccounts();
+  if (emailAccounts === undefined) return null;
+  return emailAccounts ? (
+    <EmailSignIn connect={props.connect} offline={props.offline} />
+  ) : (
+    <UsernameAccountForm {...props} />
+  );
+}
+
 /** Username/password accounts with a one-time recovery code (no email needed). */
-export default function AccountForm({
+function UsernameAccountForm({
   connect,
   offline = false,
 }: {
