@@ -30,8 +30,13 @@ test("account lifecycle: create, write, restore on a new device, recover and del
     .getByRole("button", { name: /I’ve saved my recovery code/ })
     .click();
   await page.getByRole("button", { name: "Write a note" }).click();
+  const uploaded = page.waitForResponse(
+    (r) => r.url().endsWith("/api/data") && r.request().method() === "PUT" && r.ok(),
+  );
   await page.getByLabel("Title").fill("Cross-device note");
   await page.getByRole("button", { name: "Save note" }).click();
+  // Wait for the record itself to upload, not just the initial sync.
+  await uploaded;
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("status").first()).toHaveText("Synced", {
     timeout: 15000,

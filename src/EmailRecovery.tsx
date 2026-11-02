@@ -1,3 +1,4 @@
+import { FirebaseRecoverySettings } from "./FirebaseRecovery";
 import { useEffect, useState } from "react";
 import { api } from "./account-api";
 
@@ -6,6 +7,8 @@ export function RecoveryEmailSettings() {
   const [state, setState] = useState<{
     available: boolean;
     email: string | null;
+    provider?: string;
+    state?: string | null;
   }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +19,7 @@ export function RecoveryEmailSettings() {
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    void api<{ available: boolean; email: string | null }>("/account/email")
+    void api<{ available: boolean; email: string | null }>("/account/email?protocol=firebase")
       .then((s) => {
         if (active) setState(s);
       })
@@ -42,6 +45,12 @@ export function RecoveryEmailSettings() {
       setBusy(false);
     }
   }
+  if (state?.provider === "firebase")
+    return (
+      <FirebaseRecoverySettings
+        initial={{ email: state.email, state: state.state ?? null }}
+      />
+    );
   return (
     <section className="panel" aria-label="Recovery email">
       <h2>Recovery email</h2>
@@ -171,6 +180,7 @@ export function RecoveryEmailSettings() {
 }
 export function EmailPasswordReset() {
   const [available, setAvailable] = useState<boolean>();
+  const [provider, setProvider] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -182,9 +192,14 @@ export function EmailPasswordReset() {
   const [recovery, setRecovery] = useState("");
   useEffect(() => {
     let active = true;
-    void api<{ available: boolean }>("/auth/email-capability")
+    void api<{ available: boolean; provider?: string }>(
+      "/auth/email-capability?protocol=firebase",
+    )
       .then((s) => {
-        if (active) setAvailable(s.available);
+        if (active) {
+          setAvailable(s.available);
+          setProvider(s.provider ?? "");
+        }
       })
       .catch(() => {
         if (active)
@@ -263,10 +278,16 @@ export function EmailPasswordReset() {
               Send reset email
             </button>
           </form>
-          <button type="button" className="text" onClick={() => setSent(true)}>
-            I already have an email reset code
-          </button>
-          {sent && (
+          {provider !== "firebase" && (
+            <button
+              type="button"
+              className="text"
+              onClick={() => setSent(true)}
+            >
+              I already have an email reset code
+            </button>
+          )}
+          {sent && provider !== "firebase" && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();

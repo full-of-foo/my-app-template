@@ -1,3 +1,5 @@
+import { configuredFirebaseAuth, FirebaseAuthError, type FirebaseAuth } from "./firebase-auth";
+import { FirebaseSetupError, installFirebaseRoutes, firebaseSessionValid, type FirebaseAccount } from "./firebase-routes";
 import {
   installEmailRecovery,
   recoveryMailer,
@@ -36,9 +38,11 @@ type Options = {
   limits?: boolean;
   staticDir?: string;
   recoveryMail?: RecoveryMail;
+  firebase?: FirebaseAuth;
 };
 export function createApp(pool: Pool, options: Options) {
   const app = express();
+  const firebase = options.firebase ?? (process.env.FIREBASE_AUTH_ENABLED === "true" ? configuredFirebaseAuth() : undefined);
   const dummyPassword = hashPassword("unused-account-comparison");
   app.disable("x-powered-by");
   if (options.production) app.set("trust proxy", 1);
@@ -145,11 +149,13 @@ export function createApp(pool: Pool, options: Options) {
   async function identity(req: Request) {
     const raw = cookie(req);
     if (!raw) return null;
-    const result = await pool.query<{ id: string; username: string }>(
-      "SELECT u.id,u.username FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()",
+    const result = await pool.query<FirebaseAccount>(
+      "SELECT u.*,s.firebase_valid_after FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()",
       [digest(raw)],
     );
-    return result.rows[0] ?? null;
+    const row = result.rows[0];
+    if (!row || !(await firebaseSessionValid(row, firebase, req.method === "DELETE" && req.path === "/api/account"))) return null;
+    return { id: row.id, username: row.username };
   }
   async function required(req: Request, res: Response, next: NextFunction) {
     const user = await identity(req);
@@ -163,6 +169,11 @@ export function createApp(pool: Pool, options: Options) {
     res.locals.user = user;
     next();
   }
+  installFirebaseRoutes(app, pool, {
+    firebase, required, limits: options.limits, session: makeSession,
+    setCookie: (res, value) => { res.cookie(cookieName, value, cookieOptions); },
+    clearCookie: res => { res.clearCookie(cookieName, { ...cookieOptions, maxAge: undefined }); },
+  });
   installEmailRecovery(app, pool, {
     required,
     name: config.name,
@@ -378,6 +389,11 @@ export function createApp(pool: Pool, options: Options) {
   app.use(
     (error: unknown, _req: Request, res: Response, next: NextFunction) => {
       void next;
+      if (error instanceof FirebaseSetupError) { res.status(400).json({error:error.message}); return; }
+      if (error instanceof FirebaseAuthError) {
+        res.status(error.kind === "credentials" ? 401 : 503).json({ error: error.message });
+        return;
+      }
       if (error instanceof z.ZodError) {
         res
           .status(400)

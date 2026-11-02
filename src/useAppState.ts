@@ -193,12 +193,19 @@ export function useAppState() {
       void syncNow();
     };
     const wentOffline = () => setOffline(true);
+    // A sync that raced the session swap may have failed; retry with the new session.
+    const renewed = () =>
+      void Promise.resolve(running.current)
+        .catch(() => undefined)
+        .then(() => syncNow());
     window.addEventListener("online", online);
     window.addEventListener("offline", wentOffline);
+    window.addEventListener("account:session-renewed", renewed);
     const interval = setInterval(() => void syncNow(), 60_000);
     return () => {
       window.removeEventListener("online", online);
       window.removeEventListener("offline", wentOffline);
+      window.removeEventListener("account:session-renewed", renewed);
       clearInterval(interval);
       clearTimeout(timer.current);
     };

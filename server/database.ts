@@ -15,21 +15,29 @@ export function createPool(connectionString = process.env.DATABASE_URL) {
   );
   return pool;
 }
-const migrations = new URL("./migrations/", import.meta.url);
-/**
- * Applies every `NNN_name.sql` file in order inside one transaction.
- * Migrations must be idempotent and additive; never edit an applied file.
- */
 export async function migrate(pool: Pool) {
-  const files = (await readdir(migrations))
+  const directory = new URL("./migrations/", import.meta.url);
+  const files = (await readdir(directory))
     .filter((name) => /^\d{3}_[a-z0-9_]+\.sql$/.test(name))
     .sort();
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock(762410)");
-    for (const name of files)
-      await client.query(await readFile(new URL(name, migrations), "utf8"));
+    await client.query("SELECT pg_advisory_xact_lock(762409)");
+    const exists = (
+      await client.query("SELECT to_regclass('schema_migrations') AS name")
+    ).rows[0].name;
+    const applied = new Set<number>(
+      exists
+        ? (
+            await client.query("SELECT version FROM schema_migrations")
+          ).rows.map((row) => row.version)
+        : [],
+    );
+    for (const name of files) {
+      if (!applied.has(Number(name.slice(0, 3))))
+        await client.query(await readFile(new URL(name, directory), "utf8"));
+    }
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");

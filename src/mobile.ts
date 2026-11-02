@@ -31,7 +31,7 @@ export async function requestApi(
   method: string,
   body?: unknown,
 ): Promise<Pick<Response, "status" | "ok" | "json">> {
-  if (!/^\/[a-z0-9_/-]+$/i.test(path)) throw Error("Invalid API path");
+  if (!/^\/[a-z0-9_/-]+(\?[a-z0-9_=&-]+)?$/i.test(path)) throw Error("Invalid API path");
   if (!isNative())
     return fetch(`/api${path}`, {
       method,
